@@ -1,23 +1,28 @@
-const express = require('express');
-var schedule = require('node-schedule');
+const Express = require('express');
+const Cors = require('cors');
+const Mongoose = require('mongoose');
 
-app = express();
+require('dotenv').config();
 
-var counter = 0;
-let uniqueJobName = 'test';
-var job = schedule.scheduleJob(uniqueJobName,'*/10 * * * * *', function(){
-    console.log('The counter is'+counter++);
-    test();
+let app = Express();
+
+app.use(Cors());
+app.use(Express.json());
+
+const port = process.env.PORT || 5000;
+
+Mongoose.connect(process.env.ATLAS_URI,{useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology:true});
+
+Mongoose.connection.once('open', function(){
+    console.log('Mongodb connection established!');
 });
 
-function test(){
-    if (counter>2) {
-        let current_job = schedule.scheduledJobs[uniqueJobName];
-        current_job.cancel();
-        console.log('done');
-    }
-}
+const usersRouter = require('./routes/users.route');
+const cronJobsRouter = require('./routes/cronjobs.route');
 
+app.use('/users',usersRouter);
+app.use('/jobs',cronJobsRouter);
 
-
-app.listen(3128);
+app.listen(port, ()=>{
+    console.log(`Server running on port: ${port}`);
+});
